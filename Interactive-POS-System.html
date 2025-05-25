@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POS System</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#4f46e5',secondary:'#8b5cf6'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+.cart-panel {
+transform: translateX(100%);
+transition: transform 0.3s ease-in-out;
+}
+.cart-panel.open {
+transform: translateX(0);
+}
+.product-card {
+transition: all 0.3s ease;
+}
+.product-card:hover {
+transform: translateY(-5px);
+}
+.quick-view {
+opacity: 0;
+transition: opacity 0.3s ease;
+}
+.product-card:hover .quick-view {
+opacity: 1;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+-webkit-appearance: none;
+margin: 0;
+}
+.category-tab {
+transition: all 0.3s ease;
+position: relative;
+}
+.category-tab::after {
+content: '';
+position: absolute;
+bottom: 0;
+left: 50%;
+width: 0;
+height: 2px;
+background-color: #4f46e5;
+transition: all 0.3s ease;
+transform: translateX(-50%);
+}
+.category-tab:hover::after,
+.category-tab.active::after {
+width: 80%;
+}
+.add-to-cart-btn {
+transition: all 0.3s ease;
+}
+.add-to-cart-btn:hover {
+transform: scale(1.05);
+}
+.payment-option {
+transition: all 0.3s ease;
+}
+.payment-option:hover {
+transform: translateY(-3px);
+}
+.badge {
+position: absolute;
+top: -8px;
+right: -8px;
+display: flex;
+align-items: center;
+justify-content: center;
+width: 20px;
+height: 20px;
+border-radius: 50%;
+background-color: #ef4444;
+color: white;
+font-size: 12px;
+font-weight: bold;
+}
+</style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<!-- Header -->
+<header class="bg-white shadow-sm sticky top-0 z-50">
+<div class="container mx-auto px-4 py-4 flex items-center justify-between">
+<div class="flex items-center">
+<h1 class="text-2xl font-['Pacifico'] text-primary">Litecloud</h1>
+</div>
+<div class="relative w-1/2">
+<div class="relative">
+<input type="text" placeholder="Search products..." class="w-full py-2 pl-10 pr-4 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+<div class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center text-gray-400">
+<i class="ri-search-line"></i>
+</div>
+</div>
+</div>
+<div class="flex items-center space-x-6">
+<div class="flex items-center space-x-2">
+<span class="text-gray-700 font-medium">Total:</span>
+<span class="text-primary font-bold" id="header-total">$0.00</span>
+</div>
+<button id="cart-toggle" class="relative w-10 h-10 flex items-center justify-center text-gray-700 hover:text-primary transition-colors">
+<i class="ri-shopping-cart-2-line text-xl"></i>
+<span id="cart-badge" class="badge">0</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Category Navigation -->
+<div class="bg-white border-b border-gray-200 sticky top-16 z-40">
+<div class="container mx-auto px-4">
+<div class="flex overflow-x-auto py-2 gap-6 no-scrollbar">
+<button class="category-tab active whitespace-nowrap px-4 py-2 text-primary font-medium flex items-center gap-2">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-store-2-line"></i>
+</div>
+<span>All Items</span>
+</button>
+<button class="category-tab whitespace-nowrap px-4 py-2 text-gray-600 font-medium flex items-center gap-2">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-cup-line"></i>
+</div>
+<span>Beverages</span>
+</button>
+<button class="category-tab whitespace-nowrap px-4 py-2 text-gray-600 font-medium flex items-center gap-2">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-cake-3-line"></i>
+</div>
+<span>Desserts</span>
+</button>
+<button class="category-tab whitespace-nowrap px-4 py-2 text-gray-600 font-medium flex items-center gap-2">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-sandwich-line"></i>
+</div>
+<span>Fast Food</span>
+</button>
+<button class="category-tab whitespace-nowrap px-4 py-2 text-gray-600 font-medium flex items-center gap-2">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-restaurant-line"></i>
+</div>
+<span>Main Course</span>
+</button>
+<button class="category-tab whitespace-nowrap px-4 py-2 text-gray-600 font-medium flex items-center gap-2">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-seedling-line"></i>
+</div>
+<span>Salads</span>
+</button>
+<button class="category-tab whitespace-nowrap px-4 py-2 text-gray-600 font-medium flex items-center gap-2">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-pie-chart-line"></i>
+</div>
+<span>Snacks</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Main Content -->
+<main class="container mx-auto px-4 py-8">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="products-grid">
+<!-- Product cards will be generated by JavaScript -->
+</div>
+</main>
+<!-- Cart Panel -->
+<div id="cart-panel" class="cart-panel fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-xl z-50 flex flex-col">
+<div class="p-4 border-b border-gray-200 flex items-center justify-between">
+<h2 class="text-xl font-bold">Your Cart</h2>
+<button id="close-cart" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700">
+<i class="ri-close-line text-xl"></i>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto p-4" id="cart-items">
+<div class="text-center text-gray-500 py-8">
+<div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center text-gray-300">
+<i class="ri-shopping-cart-line text-4xl"></i>
+</div>
+<p>Your cart is empty</p>
+<p class="text-sm mt-2">Add some items to get started</p>
+</div>
+</div>
+<div class="border-t border-gray-200 p-4">
+<div class="space-y-2 mb-4">
+<div class="flex justify-between">
+<span class="text-gray-600">Subtotal</span>
+<span id="cart-subtotal">$0.00</span>
+</div>
+<div class="flex justify-between">
+<span class="text-gray-600">Tax (8%)</span>
+<span id="cart-tax">$0.00</span>
+</div>
+<div class="flex justify-between font-bold">
+<span>Total</span>
+<span id="cart-total">$0.00</span>
+</div>
+</div>
+<button id="checkout-btn" class="w-full py-3 bg-primary text-white font-medium rounded-button flex items-center justify-center disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>
+<span>Proceed to Checkout</span>
+<div class="w-5 h-5 ml-2 flex items-center justify-center">
+<i class="ri-arrow-right-line"></i>
+</div>
+</button>
+</div>
+</div>
+<!-- Checkout Modal -->
+<div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+<div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+<div class="p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
+<h2 class="text-xl font-bold">Checkout</h2>
+<button id="close-checkout" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700">
+<i class="ri-close-line text-xl"></i>
+</button>
+</div>
+<div class="p-6">
+<div class="flex mb-6">
+<button class="checkout-step active flex-1 text-center py-2 border-b-2 border-primary text-primary font-medium">Order Review</button>
+<button class="checkout-step flex-1 text-center py-2 border-b-2 border-gray-200 text-gray-400">Payment</button>
+<button class="checkout-step flex-1 text-center py-2 border-b-2 border-gray-200 text-gray-400">Confirmation</button>
+</div>
+<div id="checkout-step-1" class="checkout-step-content">
+<h3 class="text-lg font-medium mb-4">Review Your Order</h3>
+<div class="border border-gray-200 rounded-lg mb-4">
+<div class="p-4 border-b border-gray-200">
+<h4 class="font-medium">Order Items</h4>
+</div>
+<div id="checkout-items" class="p-4 space-y-4">
+<!-- Checkout items will be populated by JavaScript -->
+</div>
+</div>
+<div class="border border-gray-200 rounded-lg mb-6">
+<div class="p-4 border-b border-gray-200">
+<h4 class="font-medium">Order Type</h4>
+</div>
+<div class="p-4 space-y-4">
+<div class="flex items-center space-x-3">
+<input type="radio" id="dine-in" name="order-type" value="dine-in" checked class="hidden">
+<label for="dine-in" class="flex items-center cursor-pointer">
+<span class="w-5 h-5 inline-block mr-2 rounded-full border border-gray-300 flex-shrink-0 relative">
+<span class="absolute inset-0 rounded-full bg-primary transform scale-0 transition-transform duration-200 ease-in-out dine-in-dot"></span>
+</span>
+<div class="flex items-center">
+<div class="w-5 h-5 mr-2 flex items-center justify-center text-gray-600">
+<i class="ri-restaurant-2-line"></i>
+</div>
+<span>Dine In</span>
+</div>
+</label>
+</div>
+<div class="flex items-center space-x-3">
+<input type="radio" id="takeaway" name="order-type" value="takeaway" class="hidden">
+<label for="takeaway" class="flex items-center cursor-pointer">
+<span class="w-5 h-5 inline-block mr-2 rounded-full border border-gray-300 flex-shrink-0 relative">
+<span class="absolute inset-0 rounded-full bg-primary transform scale-0 transition-transform duration-200 ease-in-out takeaway-dot"></span>
+</span>
+<div class="flex items-center">
+<div class="w-5 h-5 mr-2 flex items-center justify-center text-gray-600">
+<i class="ri-takeaway-line"></i>
+</div>
+<span>Takeaway</span>
+</div>
+</label>
+</div>
+</div>
+</div>
+<div class="flex justify-end">
+<button id="to-payment-btn" class="py-2 px-6 bg-primary text-white font-medium rounded-button flex items-center justify-center !whitespace-nowrap">
+<span>Continue to Payment</span>
+<div class="w-5 h-5 ml-2 flex items-center justify-center">
+<i class="ri-arrow-right-line"></i>
+</div>
+</button>
+</div>
+</div>
+<div id="checkout-step-2" class="checkout-step-content hidden">
+<h3 class="text-lg font-medium mb-4">Select Payment Method</h3>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="payment-option border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-primary hover:shadow-md">
+<div class="w-10 h-10 mb-3 flex items-center justify-center text-primary">
+<i class="ri-money-dollar-circle-line text-2xl"></i>
+</div>
+<h4 class="font-medium">Cash</h4>
+<p class="text-sm text-gray-500">Pay when you receive</p>
+</div>
+<div class="payment-option border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-primary hover:shadow-md">
+<div class="w-10 h-10 mb-3 flex items-center justify-center text-primary">
+<i class="ri-bank-card-line text-2xl"></i>
+</div>
+<h4 class="font-medium">Credit Card</h4>
+<p class="text-sm text-gray-500">Pay with card</p>
+</div>
+<div class="payment-option border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-primary hover:shadow-md">
+<div class="w-10 h-10 mb-3 flex items-center justify-center text-primary">
+<i class="ri-alipay-fill text-2xl"></i>
+</div>
+<h4 class="font-medium">Alipay</h4>
+<p class="text-sm text-gray-500">Pay with Alipay</p>
+</div>
+<div class="payment-option border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-primary hover:shadow-md">
+<div class="w-10 h-10 mb-3 flex items-center justify-center text-primary">
+<i class="ri-wechat-pay-fill text-2xl"></i>
+</div>
+<h4 class="font-medium">WeChat Pay</h4>
+<p class="text-sm text-gray-500">Pay with WeChat</p>
+</div>
+</div>
+<div class="border border-gray-200 rounded-lg mb-6">
+<div class="p-4 border-b border-gray-200">
+<h4 class="font-medium">Order Summary</h4>
+</div>
+<div class="p-4 space-y-2">
+<div class="flex justify-between">
+<span class="text-gray-600">Subtotal</span>
+<span id="checkout-subtotal">$0.00</span>
+</div>
+<div class="flex justify-between">
+<span class="text-gray-600">Tax (8%)</span>
+<span id="checkout-tax">$0.00</span>
+</div>
+<div class="flex justify-between font-bold">
+<span>Total</span>
+<span id="checkout-total">$0.00</span>
+</div>
+</div>
+</div>
+<div class="flex justify-between">
+<button id="back-to-review-btn" class="py-2 px-6 border border-gray-300 text-gray-700 font-medium rounded-button flex items-center justify-center !whitespace-nowrap">
+<div class="w-5 h-5 mr-2 flex items-center justify-center">
+<i class="ri-arrow-left-line"></i>
+</div>
+<span>Back</span>
+</button>
+<button id="to-confirmation-btn" class="py-2 px-6 bg-primary text-white font-medium rounded-button flex items-center justify-center !whitespace-nowrap">
+<span>Confirm Payment</span>
+<div class="w-5 h-5 ml-2 flex items-center justify-center">
+<i class="ri-arrow-right-line"></i>
+</div>
+</button>
+</div>
+</div>
+<div id="checkout-step-3" class="checkout-step-content hidden">
+<div class="text-center py-8">
+<div class="w-20 h-20 mx-auto mb-6 flex items-center justify-center text-green-500">
+<i class="ri-checkbox-circle-line text-5xl"></i>
+</div>
+<h3 class="text-2xl font-bold mb-2">Order Confirmed!</h3>
+<p class="text-gray-600 mb-6">Your order has been placed successfully.</p>
+<p class="font-medium mb-1">Order #<span id="order-number">12345</span></p>
+<p class="text-gray-600 mb-6">May 25, 2025 at 10:30 AM</p>
+<button id="new-order-btn" class="py-2 px-6 bg-primary text-white font-medium rounded-button inline-flex items-center justify-center !whitespace-nowrap">
+<span>Start New Order</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Overlay -->
+<div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+<script id="product-data">
+document.addEventListener('DOMContentLoaded', function() {
+const searchInput = document.querySelector('input[type="text"]');
+// Product data
+const products = [
+{
+id: 1,
+name: "Cappuccino",
+price: 4.50,
+image: "https://readdy.ai/api/search-image?query=A%20professional%20photograph%20of%20a%20cappuccino%20coffee%20in%20a%20white%20ceramic%20cup%20on%20a%20saucer%2C%20with%20beautiful%20latte%20art%20on%20top.%20The%20coffee%20has%20a%20rich%2C%20creamy%20texture%20with%20perfect%20microfoam.%20The%20background%20is%20simple%20and%20clean%2C%20highlighting%20the%20coffee.&width=300&height=300&seq=1&orientation=squarish",
+category: "Beverages"
+},
+{
+id: 2,
+name: "Chicken Caesar Salad",
+price: 9.95,
+image: "https://readdy.ai/api/search-image?query=A%20fresh%20and%20appetizing%20chicken%20caesar%20salad%20in%20a%20white%20bowl.%20The%20salad%20features%20grilled%20chicken%20strips%2C%20crisp%20romaine%20lettuce%2C%20parmesan%20cheese%20shavings%2C%20and%20croutons.%20The%20dressing%20is%20drizzled%20on%20top.%20The%20background%20is%20clean%20and%20minimal%2C%20focusing%20on%20the%20vibrant%20colors%20of%20the%20salad.&width=300&height=300&seq=2&orientation=squarish",
+category: "Salads"
+},
+{
+id: 3,
+name: "Chocolate Brownie",
+price: 3.95,
+image: "https://readdy.ai/api/search-image?query=A%20decadent%20chocolate%20brownie%20on%20a%20small%20white%20plate.%20The%20brownie%20is%20rich%20and%20fudgy%20with%20a%20slightly%20cracked%20top%2C%20dusted%20with%20powdered%20sugar.%20Theres%20a%20small%20scoop%20of%20vanilla%20ice%20cream%20melting%20on%20top.%20The%20background%20is%20simple%20and%20elegant%2C%20highlighting%20the%20desserts%20texture%20and%20appearance.&width=300&height=300&seq=3&orientation=squarish",
+category: "Desserts"
+},
+{
+id: 4,
+name: "Classic Cheeseburger",
+price: 12.50,
+image: "https://readdy.ai/api/search-image?query=A%20mouthwatering%20classic%20cheeseburger%20on%20a%20wooden%20serving%20board.%20The%20burger%20has%20a%20juicy%20beef%20patty%2C%20melted%20cheddar%20cheese%2C%20fresh%20lettuce%2C%20tomato%2C%20onion%2C%20and%20pickles%2C%20all%20between%20a%20toasted%20sesame%20seed%20bun.%20There%20are%20a%20few%20french%20fries%20visible%20on%20the%20side.%20The%20background%20is%20simple%20and%20clean%2C%20highlighting%20the%20burgers%20details.&width=300&height=300&seq=4&orientation=squarish",
+category: "Fast Food"
+},
+{
+id: 5,
+name: "Iced Latte",
+price: 5.25,
+image: "https://readdy.ai/api/search-image?query=A%20refreshing%20iced%20latte%20in%20a%20tall%20glass.%20The%20drink%20shows%20beautiful%20layers%20of%20milk%20and%20coffee%2C%20with%20ice%20cubes%20visible.%20Theres%20a%20metal%20straw%20in%20the%20glass%20and%20perhaps%20a%20light%20dusting%20of%20cinnamon%20on%20top.%20The%20background%20is%20clean%20and%20minimal%2C%20with%20soft%20lighting%20highlighting%20the%20drinks%20layers%20and%20condensation%20on%20the%20glass.&width=300&height=300&seq=5&orientation=squarish",
+category: "Beverages"
+},
+{
+id: 6,
+name: "Margherita Pizza",
+price: 14.95,
+image: "https://readdy.ai/api/search-image?query=A%20freshly%20baked%20Margherita%20pizza%20on%20a%20wooden%20pizza%20board.%20The%20pizza%20has%20a%20thin%2C%20slightly%20charred%20crust%2C%20topped%20with%20bright%20red%20tomato%20sauce%2C%20melted%20mozzarella%20cheese%2C%20and%20fresh%20basil%20leaves.%20Theres%20a%20light%20dusting%20of%20flour%20visible%20on%20the%20board.%20The%20background%20is%20simple%20and%20rustic%2C%20highlighting%20the%20vibrant%20colors%20of%20the%20pizza.&width=300&height=300&seq=6&orientation=squarish",
+category: "Main Course"
+},
+{
+id: 7,
+name: "French Fries",
+price: 3.50,
+image: "https://readdy.ai/api/search-image?query=A%20generous%20portion%20of%20golden%2C%20crispy%20french%20fries%20in%20a%20small%20metal%20basket%20lined%20with%20checkered%20paper.%20The%20fries%20are%20perfectly%20cooked%20-%20golden%20on%20the%20outside%20and%20fluffy%20inside.%20Theres%20a%20small%20dish%20of%20ketchup%20visible%20on%20the%20side.%20The%20background%20is%20simple%20and%20clean%2C%20highlighting%20the%20texture%20and%20color%20of%20the%20fries.&width=300&height=300&seq=7&orientation=squarish",
+category: "Snacks"
+},
+{
+id: 8,
+name: "Grilled Salmon",
+price: 18.95,
+image: "https://readdy.ai/api/search-image?query=A%20beautifully%20plated%20grilled%20salmon%20fillet%20on%20a%20white%20plate.%20The%20salmon%20has%20perfect%20grill%20marks%20and%20appears%20moist%20and%20flaky.%20Its%20garnished%20with%20fresh%20herbs%20and%20lemon%20slices%2C%20accompanied%20by%20steamed%20vegetables%20and%20perhaps%20a%20small%20portion%20of%20rice%20or%20potatoes.%20The%20background%20is%20clean%20and%20elegant%2C%20highlighting%20the%20dishs%20presentation.&width=300&height=300&seq=8&orientation=squarish",
+category: "Main Course"
+},
+{
+id: 9,
+name: "Avocado Toast",
+price: 8.75,
+image: "https://readdy.ai/api/search-image?query=A%20beautifully%20presented%20avocado%20toast%20on%20a%20wooden%20board.%20The%20toast%20features%20thick-cut%20artisanal%20bread%20topped%20with%20smashed%20avocado%2C%20cherry%20tomatoes%2C%20microgreens%2C%20and%20perhaps%20a%20sprinkle%20of%20red%20pepper%20flakes%20or%20black%20sesame%20seeds.%20There%20might%20be%20a%20poached%20egg%20on%20top%20with%20the%20yolk%20just%20starting%20to%20run.%20The%20background%20is%20simple%20and%20clean%2C%20highlighting%20the%20vibrant%20colors%20of%20the%20dish.&width=300&height=300&seq=9&orientation=squarish",
+category: "Fast Food"
+},
+{
+id: 10,
+name: "Cheesecake",
+price: 6.95,
+image: "https://readdy.ai/api/search-image?query=A%20slice%20of%20creamy%20New%20York%20style%20cheesecake%20on%20a%20small%20dessert%20plate.%20The%20cheesecake%20has%20a%20golden%20graham%20cracker%20crust%20and%20is%20topped%20with%20fresh%20berries%20and%20a%20light%20dusting%20of%20powdered%20sugar.%20There%20might%20be%20a%20small%20swirl%20of%20berry%20coulis%20on%20the%20plate.%20The%20background%20is%20simple%20and%20elegant%2C%20highlighting%20the%20desserts%20smooth%20texture%20and%20presentation.&width=300&height=300&seq=10&orientation=squarish",
+category: "Desserts"
+},
+{
+id: 11,
+name: "Greek Salad",
+price: 8.95,
+image: "https://readdy.ai/api/search-image?query=A%20fresh%20and%20colorful%20Greek%20salad%20in%20a%20white%20bowl.%20The%20salad%20features%20chunks%20of%20cucumber%2C%20tomato%2C%20red%20onion%2C%20black%20olives%2C%20and%20large%20cubes%20of%20feta%20cheese.%20Its%20dressed%20with%20olive%20oil%20and%20perhaps%20a%20sprinkle%20of%20oregano.%20The%20background%20is%20simple%20and%20clean%2C%20highlighting%20the%20vibrant%20colors%20and%20freshness%20of%20the%20ingredients.&width=300&height=300&seq=11&orientation=squarish",
+category: "Salads"
+},
+{
+id: 12,
+name: "Espresso",
+price: 3.25,
+image: "https://readdy.ai/api/search-image?query=A%20perfect%20shot%20of%20espresso%20in%20a%20small%20white%20espresso%20cup%20with%20saucer.%20The%20espresso%20has%20a%20rich%20crema%20on%20top%20and%20appears%20dark%20and%20intense.%20There%20might%20be%20a%20small%20spoon%20on%20the%20side%20and%20perhaps%20a%20small%20biscotti%20or%20chocolate%20square.%20The%20background%20is%20simple%20and%20clean%2C%20highlighting%20the%20coffees%20rich%20color%20and%20texture.&width=300&height=300&seq=12&orientation=squarish",
+category: "Beverages"
+}
+];
+// Generate product cards
+const productsGrid = document.getElementById('products-grid');
+products.forEach(product => {
+const productCard = document.createElement('div');
+productCard.className = 'product-card bg-white rounded-lg shadow-sm overflow-hidden';
+productCard.dataset.id = product.id;
+productCard.dataset.category = product.category;
+productCard.dataset.name = product.name.toLowerCase();
+productCard.innerHTML = `
+<div class="relative h-48">
+<img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover object-center">
+<button class="quick-view absolute top-2 right-2 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-gray-700 hover:text-primary">
+<i class="ri-eye-line"></i>
+</button>
+</div>
+<div class="p-4">
+<h3 class="font-medium text-gray-900">${product.name}</h3>
+<div class="flex items-center justify-between mt-2">
+<span class="text-primary font-bold">$${product.price.toFixed(2)}</span>
+<button class="add-to-cart-btn py-1 px-3 bg-primary text-white text-sm rounded-button flex items-center !whitespace-nowrap">
+<span>Add to Cart</span>
+<div class="w-4 h-4 ml-1 flex items-center justify-center">
+<i class="ri-add-line"></i>
+</div>
+</button>
+</div>
+</div>
+`;
+productsGrid.appendChild(productCard);
+});
+// Search functionality
+searchInput.addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const productCards = document.querySelectorAll('.product-card');
+    
+    productCards.forEach(card => {
+        const productName = card.dataset.name;
+        const category = card.dataset.category.toLowerCase();
+        
+        if (productName.includes(searchTerm) || category.includes(searchTerm)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+});
+});
+</script>
+<script id="cart-functionality">
+document.addEventListener('DOMContentLoaded', function() {
+// Cart functionality
+const cartToggle = document.getElementById('cart-toggle');
+const closeCart = document.getElementById('close-cart');
+const cartPanel = document.getElementById('cart-panel');
+const overlay = document.getElementById('overlay');
+const cartItems = document.getElementById('cart-items');
+const cartBadge = document.getElementById('cart-badge');
+const cartSubtotal = document.getElementById('cart-subtotal');
+const cartTax = document.getElementById('cart-tax');
+const cartTotal = document.getElementById('cart-total');
+const headerTotal = document.getElementById('header-total');
+const checkoutBtn = document.getElementById('checkout-btn');
+let cart = [];
+// Add to cart functionality
+document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+button.addEventListener('click', function() {
+const productCard = this.closest('.product-card');
+const productId = parseInt(productCard.dataset.id);
+const productName = productCard.querySelector('h3').textContent;
+const productPrice = parseFloat(productCard.querySelector('.text-primary').textContent.replace('$', ''));
+const productImage = productCard.querySelector('img').src;
+// Check if product already in cart
+const existingItem = cart.find(item => item.id === productId);
+if (existingItem) {
+existingItem.quantity += 1;
+} else {
+cart.push({
+id: productId,
+name: productName,
+price: productPrice,
+image: productImage,
+quantity: 1
+});
+}
+updateCart();
+// Show notification
+const notification = document.createElement('div');
+notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50 flex items-center';
+notification.innerHTML = `
+<div class="w-5 h-5 mr-2 flex items-center justify-center">
+<i class="ri-check-line"></i>
+</div>
+<span>Added to cart</span>
+`;
+document.body.appendChild(notification);
+setTimeout(() => {
+notification.remove();
+}, 2000);
+});
+});
+// Update cart function
+function updateCart() {
+// Update badge
+const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+cartBadge.textContent = totalItems;
+// Update cart items
+if (totalItems === 0) {
+cartItems.innerHTML = `
+<div class="text-center text-gray-500 py-8">
+<div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center text-gray-300">
+<i class="ri-shopping-cart-line text-4xl"></i>
+</div>
+<p>Your cart is empty</p>
+<p class="text-sm mt-2">Add some items to get started</p>
+</div>
+`;
+checkoutBtn.disabled = true;
+} else {
+cartItems.innerHTML = '';
+cart.forEach(item => {
+const cartItem = document.createElement('div');
+cartItem.className = 'flex items-center border-b border-gray-100 pb-4 mb-4 last:mb-0 last:pb-0 last:border-0';
+cartItem.innerHTML = `
+<img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-cover object-top rounded">
+<div class="ml-4 flex-1">
+<h4 class="font-medium">${item.name}</h4>
+<div class="flex items-center justify-between mt-2">
+<span class="text-primary font-medium">$${(item.price * item.quantity).toFixed(2)}</span>
+<div class="flex items-center border border-gray-200 rounded">
+<button class="decrease-quantity w-8 h-8 flex items-center justify-center text-gray-500 hover:text-primary" data-id="${item.id}">
+<i class="ri-subtract-line"></i>
+</button>
+<span class="w-8 text-center">${item.quantity}</span>
+<button class="increase-quantity w-8 h-8 flex items-center justify-center text-gray-500 hover:text-primary" data-id="${item.id}">
+<i class="ri-add-line"></i>
+</button>
+</div>
+</div>
+</div>
+<button class="remove-item ml-4 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500" data-id="${item.id}">
+<i class="ri-delete-bin-line"></i>
+</button>
+`;
+cartItems.appendChild(cartItem);
+});
+checkoutBtn.disabled = false;
+}
+// Update totals
+const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+const tax = subtotal * 0.08;
+const total = subtotal + tax;
+cartSubtotal.textContent = `$${subtotal.toFixed(2)}`;
+cartTax.textContent = `$${tax.toFixed(2)}`;
+cartTotal.textContent = `$${total.toFixed(2)}`;
+headerTotal.textContent = `$${total.toFixed(2)}`;
+// Add event listeners to cart item buttons
+document.querySelectorAll('.increase-quantity').forEach(button => {
+button.addEventListener('click', function() {
+const id = parseInt(this.dataset.id);
+const item = cart.find(item => item.id === id);
+item.quantity += 1;
+updateCart();
+});
+});
+document.querySelectorAll('.decrease-quantity').forEach(button => {
+button.addEventListener('click', function() {
+const id = parseInt(this.dataset.id);
+const item = cart.find(item => item.id === id);
+if (item.quantity > 1) {
+item.quantity -= 1;
+} else {
+cart = cart.filter(cartItem => cartItem.id !== id);
+}
+updateCart();
+});
+});
+document.querySelectorAll('.remove-item').forEach(button => {
+button.addEventListener('click', function() {
+const id = parseInt(this.dataset.id);
+cart = cart.filter(item => item.id !== id);
+updateCart();
+});
+});
+}
+// Toggle cart panel
+cartToggle.addEventListener('click', function() {
+cartPanel.classList.add('open');
+overlay.classList.remove('hidden');
+document.body.style.overflow = 'hidden';
+});
+closeCart.addEventListener('click', function() {
+cartPanel.classList.remove('open');
+overlay.classList.add('hidden');
+document.body.style.overflow = '';
+});
+overlay.addEventListener('click', function() {
+cartPanel.classList.remove('open');
+overlay.classList.add('hidden');
+document.body.style.overflow = '';
+const checkoutModal = document.getElementById('checkout-modal');
+if (!checkoutModal.classList.contains('hidden')) {
+checkoutModal.classList.add('hidden');
+}
+});
+// Search functionality
+searchInput.addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const productCards = document.querySelectorAll('.product-card');
+    
+    productCards.forEach(card => {
+        const productName = card.dataset.name;
+        const category = card.dataset.category.toLowerCase();
+        
+        if (productName.includes(searchTerm) || category.includes(searchTerm)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+});
+});
+</script>
+<script id="category-tabs">
+document.addEventListener('DOMContentLoaded', function() {
+// Category tabs functionality
+const categoryTabs = document.querySelectorAll('.category-tab');
+const productCards = document.querySelectorAll('.product-card');
+categoryTabs.forEach(tab => {
+tab.addEventListener('click', function() {
+// Remove active class from all tabs
+categoryTabs.forEach(t => t.classList.remove('active', 'text-primary'));
+categoryTabs.forEach(t => t.classList.add('text-gray-600'));
+// Add active class to clicked tab
+this.classList.add('active', 'text-primary');
+this.classList.remove('text-gray-600');
+// Filter products
+const category = this.textContent.trim();
+if (category === 'All Items') {
+productCards.forEach(card => {
+card.style.display = 'block';
+});
+} else {
+productCards.forEach(card => {
+if (card.dataset.category === category) {
+card.style.display = 'block';
+} else {
+card.style.display = 'none';
+}
+});
+}
+});
+});
+// Search functionality
+searchInput.addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const productCards = document.querySelectorAll('.product-card');
+    
+    productCards.forEach(card => {
+        const productName = card.dataset.name;
+        const category = card.dataset.category.toLowerCase();
+        
+        if (productName.includes(searchTerm) || category.includes(searchTerm)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+});
+});
+</script>
+<script id="checkout-process">
+document.addEventListener('DOMContentLoaded', function() {
+// Checkout process
+const checkoutBtn = document.getElementById('checkout-btn');
+const checkoutModal = document.getElementById('checkout-modal');
+const closeCheckout = document.getElementById('close-checkout');
+const overlay = document.getElementById('overlay');
+const checkoutSteps = document.querySelectorAll('.checkout-step');
+const checkoutStepContents = document.querySelectorAll('.checkout-step-content');
+const toPaymentBtn = document.getElementById('to-payment-btn');
+const backToReviewBtn = document.getElementById('back-to-review-btn');
+const toConfirmationBtn = document.getElementById('to-confirmation-btn');
+const newOrderBtn = document.getElementById('new-order-btn');
+const checkoutSubtotal = document.getElementById('checkout-subtotal');
+const checkoutTax = document.getElementById('checkout-tax');
+const checkoutTotal = document.getElementById('checkout-total');
+const checkoutItems = document.getElementById('checkout-items');
+const orderNumber = document.getElementById('order-number');
+// Custom radio buttons
+const dineInRadio = document.getElementById('dine-in');
+const takeawayRadio = document.getElementById('takeaway');
+const dineInDot = document.querySelector('.dine-in-dot');
+const takeawayDot = document.querySelector('.takeaway-dot');
+dineInRadio.addEventListener('change', function() {
+if (this.checked) {
+dineInDot.style.transform = 'scale(1)';
+takeawayDot.style.transform = 'scale(0)';
+}
+});
+takeawayRadio.addEventListener('change', function() {
+if (this.checked) {
+takeawayDot.style.transform = 'scale(1)';
+dineInDot.style.transform = 'scale(0)';
+}
+});
+// Initialize with dine-in selected
+dineInDot.style.transform = 'scale(1)';
+function showCheckoutStep(stepIndex) {
+checkoutSteps.forEach((step, index) => {
+if (index < stepIndex) {
+step.classList.remove('active', 'text-primary', 'border-primary');
+step.classList.add('text-gray-700', 'border-gray-200');
+} else if (index === stepIndex) {
+step.classList.add('active', 'text-primary', 'border-primary');
+step.classList.remove('text-gray-400', 'border-gray-200');
+} else {
+step.classList.remove('active', 'text-primary', 'border-primary');
+step.classList.add('text-gray-400', 'border-gray-200');
+}
+});
+checkoutStepContents.forEach((content, index) => {
+if (index === stepIndex) {
+content.classList.remove('hidden');
+} else {
+content.classList.add('hidden');
+}
+});
+}
+checkoutBtn.addEventListener('click', function() {
+// Update checkout items
+const cart = Array.from(document.querySelectorAll('#cart-items > div:not(.text-center)'))
+.map(item => {
+const name = item.querySelector('h4').textContent;
+const price = parseFloat(item.querySelector('.text-primary').textContent.replace('$', ''));
+const quantity = parseInt(item.querySelector('.w-8.text-center').textContent);
+const image = item.querySelector('img').src;
+return { name, price, quantity, image };
+});
+if (cart.length > 0) {
+checkoutItems.innerHTML = '';
+cart.forEach(item => {
+const checkoutItem = document.createElement('div');
+checkoutItem.className = 'flex items-center';
+checkoutItem.innerHTML = `
+<img src="${item.image}" alt="${item.name}" class="w-12 h-12 object-cover object-top rounded">
+<div class="ml-3 flex-1">
+<div class="flex justify-between">
+<h4 class="font-medium">${item.name}</h4>
+<span class="font-medium">$${(item.price).toFixed(2)}</span>
+</div>
+<div class="flex justify-between text-sm text-gray-500">
+<span>Qty: ${item.quantity}</span>
+<span>$${(item.price * item.quantity).toFixed(2)}</span>
+</div>
+</div>
+`;
+checkoutItems.appendChild(checkoutItem);
+});
+// Update totals
+const subtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+const tax = subtotal * 0.08;
+const total = subtotal + tax;
+checkoutSubtotal.textContent = `$${subtotal.toFixed(2)}`;
+checkoutTax.textContent = `$${tax.toFixed(2)}`;
+checkoutTotal.textContent = `$${total.toFixed(2)}`;
+// Generate random order number
+orderNumber.textContent = Math.floor(10000 + Math.random() * 90000);
+// Show checkout modal
+checkoutModal.classList.remove('hidden');
+overlay.classList.remove('hidden');
+document.body.style.overflow = 'hidden';
+// Close cart panel
+document.getElementById('cart-panel').classList.remove('open');
+// Show first step
+showCheckoutStep(0);
+}
+});
+closeCheckout.addEventListener('click', function() {
+checkoutModal.classList.add('hidden');
+overlay.classList.add('hidden');
+document.body.style.overflow = '';
+});
+toPaymentBtn.addEventListener('click', function() {
+showCheckoutStep(1);
+});
+backToReviewBtn.addEventListener('click', function() {
+showCheckoutStep(0);
+});
+toConfirmationBtn.addEventListener('click', function() {
+showCheckoutStep(2);
+});
+newOrderBtn.addEventListener('click', function() {
+// Clear cart
+const cartItems = document.getElementById('cart-items');
+cartItems.innerHTML = `
+<div class="text-center text-gray-500 py-8">
+<div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center text-gray-300">
+<i class="ri-shopping-cart-line text-4xl"></i>
+</div>
+<p>Your cart is empty</p>
+<p class="text-sm mt-2">Add some items to get started</p>
+</div>
+`;
+// Update badge and totals
+document.getElementById('cart-badge').textContent = '0';
+document.getElementById('cart-subtotal').textContent = '$0.00';
+document.getElementById('cart-tax').textContent = '$0.00';
+document.getElementById('cart-total').textContent = '$0.00';
+document.getElementById('header-total').textContent = '$0.00';
+document.getElementById('checkout-btn').disabled = true;
+// Close checkout modal
+checkoutModal.classList.add('hidden');
+overlay.classList.add('hidden');
+document.body.style.overflow = '';
+});
+// Payment options
+document.querySelectorAll('.payment-option').forEach(option => {
+option.addEventListener('click', function() {
+document.querySelectorAll('.payment-option').forEach(opt => {
+opt.classList.remove('border-primary', 'shadow-md');
+opt.classList.add('border-gray-200');
+});
+this.classList.remove('border-gray-200');
+this.classList.add('border-primary', 'shadow-md');
+});
+});
+// Search functionality
+searchInput.addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const productCards = document.querySelectorAll('.product-card');
+    
+    productCards.forEach(card => {
+        const productName = card.dataset.name;
+        const category = card.dataset.category.toLowerCase();
+        
+        if (productName.includes(searchTerm) || category.includes(searchTerm)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+});
+});
+</script>
+</body>
+</html>

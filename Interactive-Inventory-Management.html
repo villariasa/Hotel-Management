@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventory Management System</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#2563eb',secondary:'#64748b'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+body {
+font-family: 'Inter', sans-serif;
+background-color: #f8fafc;
+}
+.category-tab {
+transition: all 0.3s ease;
+}
+.category-tab:hover {
+background-color: rgba(37, 99, 235, 0.1);
+}
+.category-tab.active {
+background-color: rgba(37, 99, 235, 0.15);
+border-left: 3px solid #2563eb;
+}
+.item-card {
+transition: all 0.3s ease;
+}
+.item-card:hover {
+transform: translateY(-4px);
+box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+.item-card:hover .quick-actions {
+opacity: 1;
+}
+.quick-actions {
+opacity: 0;
+transition: opacity 0.3s ease;
+}
+.modal {
+transition: opacity 0.3s ease;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+-webkit-appearance: none;
+margin: 0;
+}
+input[type="number"] {
+-moz-appearance: textfield;
+}
+.custom-checkbox {
+position: relative;
+display: inline-block;
+width: 20px;
+height: 20px;
+background-color: white;
+border: 2px solid #cbd5e1;
+border-radius: 4px;
+transition: all 0.2s ease;
+}
+.custom-checkbox.checked {
+background-color: #2563eb;
+border-color: #2563eb;
+}
+.custom-checkbox.checked:after {
+content: '';
+position: absolute;
+left: 6px;
+top: 2px;
+width: 6px;
+height: 10px;
+border: solid white;
+border-width: 0 2px 2px 0;
+transform: rotate(45deg);
+}
+.custom-switch {
+position: relative;
+display: inline-block;
+width: 44px;
+height: 24px;
+}
+.custom-switch-track {
+position: absolute;
+cursor: pointer;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background-color: #cbd5e1;
+transition: .4s;
+border-radius: 34px;
+}
+.custom-switch-thumb {
+position: absolute;
+height: 20px;
+width: 20px;
+left: 2px;
+bottom: 2px;
+background-color: white;
+transition: .4s;
+border-radius: 50%;
+}
+.custom-switch.active .custom-switch-track {
+background-color: #2563eb;
+}
+.custom-switch.active .custom-switch-thumb {
+transform: translateX(20px);
+}
+.range-slider {
+-webkit-appearance: none;
+width: 100%;
+height: 6px;
+border-radius: 5px;
+background: #e2e8f0;
+outline: none;
+}
+.range-slider::-webkit-slider-thumb {
+-webkit-appearance: none;
+appearance: none;
+width: 18px;
+height: 18px;
+border-radius: 50%;
+background: #2563eb;
+cursor: pointer;
+transition: all 0.2s ease;
+}
+.range-slider::-webkit-slider-thumb:hover {
+transform: scale(1.1);
+}
+.range-slider::-moz-range-thumb {
+width: 18px;
+height: 18px;
+border-radius: 50%;
+background: #2563eb;
+cursor: pointer;
+transition: all 0.2s ease;
+border: none;
+}
+.range-slider::-moz-range-thumb:hover {
+transform: scale(1.1);
+}
+.toast {
+animation: slideIn 0.3s ease, fadeOut 0.5s ease 2.5s forwards;
+transform-origin: top right;
+}
+@keyframes slideIn {
+from {
+transform: translateY(-20px);
+opacity: 0;
+}
+to {
+transform: translateY(0);
+opacity: 1;
+}
+}
+@keyframes fadeOut {
+from {
+opacity: 1;
+}
+to {
+opacity: 0;
+visibility: hidden;
+}
+}
+.image-upload-area {
+transition: all 0.3s ease;
+}
+.image-upload-area:hover {
+background-color: rgba(37, 99, 235, 0.05);
+}
+</style>
+</head>
+<body>
+<div class="flex h-screen overflow-hidden">
+<!-- Left Sidebar - Categories -->
+<div class="w-64 bg-white shadow-md flex flex-col h-full">
+<div class="p-4 border-b border-gray-100 flex items-center">
+<h1 class="text-2xl font-['Pacifico'] text-primary">Litecloud</h1>
+</div>
+<div class="flex-1 overflow-y-auto py-2">
+<div class="px-4 py-2 text-sm font-medium text-gray-500 uppercase">Categories</div>
+<div id="categories-list">
+<div class="category-tab active flex items-center px-4 py-3 cursor-pointer">
+<div class="w-8 h-8 flex items-center justify-center text-primary">
+<i class="ri-apps-line ri-lg"></i>
+</div>
+<span class="ml-3 text-gray-800 font-medium">All Items</span>
+</div>
+<div class="category-tab flex items-center px-4 py-3 cursor-pointer">
+<div class="w-8 h-8 flex items-center justify-center text-primary">
+<i class="ri-computer-line ri-lg"></i>
+</div>
+<span class="ml-3 text-gray-800">Electronics</span>
+</div>
+<div class="category-tab flex items-center px-4 py-3 cursor-pointer">
+<div class="w-8 h-8 flex items-center justify-center text-primary">
+<i class="ri-t-shirt-line ri-lg"></i>
+</div>
+<span class="ml-3 text-gray-800">Clothing</span>
+</div>
+<div class="category-tab flex items-center px-4 py-3 cursor-pointer">
+<div class="w-8 h-8 flex items-center justify-center text-primary">
+<i class="ri-home-line ri-lg"></i>
+</div>
+<span class="ml-3 text-gray-800">Home & Kitchen</span>
+</div>
+<div class="category-tab flex items-center px-4 py-3 cursor-pointer">
+<div class="w-8 h-8 flex items-center justify-center text-primary">
+<i class="ri-book-line ri-lg"></i>
+</div>
+<span class="ml-3 text-gray-800">Books</span>
+</div>
+<div class="category-tab flex items-center px-4 py-3 cursor-pointer">
+<div class="w-8 h-8 flex items-center justify-center text-primary">
+<i class="ri-game-line ri-lg"></i>
+</div>
+<span class="ml-3 text-gray-800">Toys & Games</span>
+</div>
+</div>
+</div>
+<div class="p-4 border-t border-gray-100">
+<button id="add-category-btn" class="flex items-center justify-center w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-button transition-colors duration-200">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-add-line"></i>
+</div>
+<span class="ml-2 whitespace-nowrap">Add Category</span>
+</button>
+</div>
+</div>
+<!-- Main Content -->
+<div class="flex-1 flex flex-col overflow-hidden">
+<!-- Top Bar -->
+<div class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+<div class="flex items-center justify-between">
+<div class="flex-1 max-w-2xl">
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<div class="w-5 h-5 flex items-center justify-center text-gray-400">
+<i class="ri-search-line"></i>
+</div>
+</div>
+<input type="text" id="search-input" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-button text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Search by name, category, or ID...">
+</div>
+</div>
+<div class="flex items-center ml-4 space-x-3">
+<div class="relative" id="filter-dropdown-container">
+<button id="filter-btn" class="flex items-center justify-center py-2 px-4 border border-gray-300 rounded-button hover:bg-gray-50 text-gray-700 text-sm whitespace-nowrap">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-filter-3-line"></i>
+</div>
+<span class="ml-2">Filters</span>
+</button>
+<div id="filter-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-10 p-4">
+<div class="mb-4">
+<label class="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
+<div class="flex items-center space-x-2">
+<input type="number" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Min">
+<span class="text-gray-500">-</span>
+<input type="number" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Max">
+</div>
+</div>
+<div class="mb-4">
+<label class="block text-sm font-medium text-gray-700 mb-1">Stock Status</label>
+<div class="space-y-2">
+<div class="flex items-center">
+<div class="custom-checkbox" data-value="in-stock"></div>
+<span class="ml-2 text-sm text-gray-700">In Stock</span>
+</div>
+<div class="flex items-center">
+<div class="custom-checkbox" data-value="low-stock"></div>
+<span class="ml-2 text-sm text-gray-700">Low Stock</span>
+</div>
+<div class="flex items-center">
+<div class="custom-checkbox" data-value="out-of-stock"></div>
+<span class="ml-2 text-sm text-gray-700">Out of Stock</span>
+</div>
+</div>
+</div>
+<div class="pt-2 border-t border-gray-200">
+<div class="flex justify-end space-x-2">
+<button class="py-1.5 px-3 text-sm text-gray-600 hover:text-gray-800 whitespace-nowrap">Reset</button>
+<button class="py-1.5 px-3 bg-primary text-white rounded-button text-sm hover:bg-primary/90 whitespace-nowrap">Apply Filters</button>
+</div>
+</div>
+</div>
+</div>
+<div class="relative" id="sort-dropdown-container">
+<button id="sort-btn" class="flex items-center justify-center py-2 px-4 border border-gray-300 rounded-button hover:bg-gray-50 text-gray-700 text-sm whitespace-nowrap">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-sort-desc"></i>
+</div>
+<span class="ml-2">Sort</span>
+</button>
+<div id="sort-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+<div class="py-1">
+<a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Name (A-Z)</a>
+<a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Name (Z-A)</a>
+<a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Price (Low to High)</a>
+<a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Price (High to Low)</a>
+<a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Quantity (Low to High)</a>
+<a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Quantity (High to Low)</a>
+<a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Date Added (Newest)</a>
+<a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Date Added (Oldest)</a>
+</div>
+</div>
+</div>
+<button id="add-item-btn" class="flex items-center justify-center py-2 px-4 bg-primary text-white rounded-button hover:bg-primary/90 text-sm whitespace-nowrap">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-add-line"></i>
+</div>
+<span class="ml-2">Add Item</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Content Area -->
+<div class="flex-1 overflow-y-auto p-6 bg-gray-50">
+<div class="mb-6">
+<h2 class="text-xl font-semibold text-gray-800">All Items</h2>
+<p class="text-sm text-gray-500">Showing 12 items</p>
+</div>
+<div id="items-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+<!-- Item cards will be dynamically generated here -->
+</div>
+</div>
+</div>
+</div>
+<!-- Add Item Modal -->
+<div id="add-item-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+<div class="absolute inset-0 bg-black bg-opacity-50" id="modal-overlay"></div>
+<div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 z-10 overflow-hidden">
+<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+<h3 class="text-lg font-semibold text-gray-800">Add New Item</h3>
+<button id="close-modal" class="text-gray-400 hover:text-gray-500">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-close-line ri-lg"></i>
+</div>
+</button>
+</div>
+<div class="px-6 py-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+<form id="add-item-form">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="md:col-span-1">
+<div class="mb-4">
+<label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+<div class="relative">
+<select id="category-select" class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-primary focus:border-primary rounded-button appearance-none">
+<option value="">Select a category</option>
+<option value="electronics">Electronics</option>
+<option value="clothing">Clothing</option>
+<option value="home-kitchen">Home & Kitchen</option>
+<option value="books">Books</option>
+<option value="toys-games">Toys & Games</option>
+</select>
+<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+<div class="w-5 h-5 flex items-center justify-center text-gray-400">
+<i class="ri-arrow-down-s-line"></i>
+</div>
+</div>
+</div>
+</div>
+<div class="mb-4">
+<label class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+<input type="text" id="item-name" class="block w-full px-3 py-2 border border-gray-300 rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Enter item name">
+</div>
+<div class="grid grid-cols-2 gap-4 mb-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="text-gray-500">$</span>
+</div>
+<input type="number" id="item-price" min="0" step="0.01" class="block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="0.00">
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+<div class="flex">
+<button type="button" class="px-3 py-2 border border-r-0 border-gray-300 rounded-l-button bg-gray-50 hover:bg-gray-100" id="decrease-qty">
+<div class="w-4 h-4 flex items-center justify-center">
+<i class="ri-subtract-line"></i>
+</div>
+</button>
+<input type="number" id="item-quantity" min="0" class="block w-full text-center px-3 py-2 border-y border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" value="1">
+<button type="button" class="px-3 py-2 border border-l-0 border-gray-300 rounded-r-button bg-gray-50 hover:bg-gray-100" id="increase-qty">
+<div class="w-4 h-4 flex items-center justify-center">
+<i class="ri-add-line"></i>
+</div>
+</button>
+</div>
+</div>
+</div>
+<div class="mb-4">
+<label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+<textarea id="item-description" rows="4" class="block w-full px-3 py-2 border border-gray-300 rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Enter item description"></textarea>
+</div>
+</div>
+<div class="md:col-span-1">
+<label class="block text-sm font-medium text-gray-700 mb-1">Item Image</label>
+<div id="image-upload-area" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center image-upload-area">
+<div id="image-preview" class="hidden mb-4 relative">
+<img id="preview-image" src="" alt="Preview" class="mx-auto max-h-48 rounded">
+<button type="button" id="remove-image" class="absolute top-0 right-0 bg-white rounded-full p-1 shadow-md">
+<div class="w-5 h-5 flex items-center justify-center text-gray-500 hover:text-gray-700">
+<i class="ri-close-line"></i>
+</div>
+</button>
+</div>
+<div id="upload-prompt">
+<div class="mx-auto w-12 h-12 flex items-center justify-center text-gray-400 mb-2">
+<i class="ri-image-add-line ri-2x"></i>
+</div>
+<p class="text-sm text-gray-500">Drag and drop an image here, or <span class="text-primary cursor-pointer">browse</span></p>
+<p class="text-xs text-gray-400 mt-1">Supported formats: JPG, PNG, GIF (Max 5MB)</p>
+</div>
+<input type="file" id="item-image" accept="image/*" class="hidden">
+</div>
+<div class="mt-6">
+<label class="block text-sm font-medium text-gray-700 mb-3">Additional Settings</label>
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<span class="text-sm text-gray-700">Track inventory</span>
+<div class="custom-switch" id="track-inventory-switch">
+<div class="custom-switch-track"></div>
+<div class="custom-switch-thumb"></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-sm text-gray-700">Low stock alert</span>
+<div class="custom-switch" id="low-stock-switch">
+<div class="custom-switch-track"></div>
+<div class="custom-switch-thumb"></div>
+</div>
+</div>
+<div id="low-stock-threshold" class="hidden mt-2">
+<label class="block text-xs text-gray-500 mb-1">Alert when quantity falls below:</label>
+<input type="number" min="1" class="block w-full px-3 py-2 border border-gray-300 rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" value="5">
+</div>
+</div>
+</div>
+</div>
+</div>
+</form>
+</div>
+<div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+<button id="cancel-add-item" class="py-2 px-4 border border-gray-300 rounded-button text-gray-700 hover:bg-gray-50 text-sm whitespace-nowrap">Cancel</button>
+<button id="save-item" class="py-2 px-4 bg-primary text-white rounded-button hover:bg-primary/90 text-sm whitespace-nowrap">Save Item</button>
+</div>
+</div>
+</div>
+<!-- Add Category Modal -->
+<div id="add-category-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+<div class="absolute inset-0 bg-black bg-opacity-50" id="category-modal-overlay"></div>
+<div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 z-10">
+<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+<h3 class="text-lg font-semibold text-gray-800">Add New Category</h3>
+<button id="close-category-modal" class="text-gray-400 hover:text-gray-500">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-close-line ri-lg"></i>
+</div>
+</button>
+</div>
+<div class="px-6 py-4">
+<form id="add-category-form">
+<div class="mb-4">
+<label class="block text-sm font-medium text-gray-700 mb-1">Category Name</label>
+<input type="text" id="category-name" class="block w-full px-3 py-2 border border-gray-300 rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Enter category name">
+</div>
+<div class="mb-4">
+<label class="block text-sm font-medium text-gray-700 mb-1">Icon</label>
+<div class="grid grid-cols-8 gap-2">
+<div class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded cursor-pointer hover:bg-gray-50 icon-option selected">
+<i class="ri-shopping-bag-line"></i>
+</div>
+<div class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded cursor-pointer hover:bg-gray-50 icon-option">
+<i class="ri-computer-line"></i>
+</div>
+<div class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded cursor-pointer hover:bg-gray-50 icon-option">
+<i class="ri-t-shirt-line"></i>
+</div>
+<div class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded cursor-pointer hover:bg-gray-50 icon-option">
+<i class="ri-home-line"></i>
+</div>
+<div class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded cursor-pointer hover:bg-gray-50 icon-option">
+<i class="ri-book-line"></i>
+</div>
+<div class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded cursor-pointer hover:bg-gray-50 icon-option">
+<i class="ri-game-line"></i>
+</div>
+<div class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded cursor-pointer hover:bg-gray-50 icon-option">
+<i class="ri-restaurant-line"></i>
+</div>
+<div class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded cursor-pointer hover:bg-gray-50 icon-option">
+<i class="ri-medicine-bottle-line"></i>
+</div>
+<div class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded cursor-pointer hover:bg-gray-50 icon-option">
+<i class="ri-car-line"></i>
+</div>
+<div class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded cursor-pointer hover:bg-gray-50 icon-option">
+<i class="ri-plant-line"></i>
+</div>
+<div class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded cursor-pointer hover:bg-gray-50 icon-option">
+<i class="ri-tools-line"></i>
+</div>
+<div class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded cursor-pointer hover:bg-gray-50 icon-option">
+<i class="ri-gift-line"></i>
+</div>
+<div class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded cursor-pointer hover:bg-gray-50 icon-option">
+<i class="ri-music-line"></i>
+</div>
+<div class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded cursor-pointer hover:bg-gray-50 icon-option">
+<i class="ri-film-line"></i>
+</div>
+<div class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded cursor-pointer hover:bg-gray-50 icon-option">
+<i class="ri-heart-line"></i>
+</div>
+<div class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded cursor-pointer hover:bg-gray-50 icon-option">
+<i class="ri-folder-line"></i>
+</div>
+</div>
+</div>
+<div class="mb-4">
+<label class="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+<textarea id="category-description" rows="3" class="block w-full px-3 py-2 border border-gray-300 rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Enter category description"></textarea>
+</div>
+</form>
+</div>
+<div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+<button id="cancel-add-category" class="py-2 px-4 border border-gray-300 rounded-button text-gray-700 hover:bg-gray-50 text-sm whitespace-nowrap">Cancel</button>
+<button id="save-category" class="py-2 px-4 bg-primary text-white rounded-button hover:bg-primary/90 text-sm whitespace-nowrap">Save Category</button>
+</div>
+</div>
+</div>
+<!-- Edit Item Modal -->
+<div id="edit-item-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+<div class="absolute inset-0 bg-black bg-opacity-50" id="edit-modal-overlay"></div>
+<div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 z-10 overflow-hidden">
+<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+<h3 class="text-lg font-semibold text-gray-800">Edit Item</h3>
+<button id="close-edit-modal" class="text-gray-400 hover:text-gray-500">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-close-line ri-lg"></i>
+</div>
+</button>
+</div>
+<div class="px-6 py-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+<form id="edit-item-form">
+<input type="hidden" id="edit-item-id">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="md:col-span-1">
+<div class="mb-4">
+<label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+<div class="relative">
+<select id="edit-category-select" class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-primary focus:border-primary rounded-button appearance-none">
+<option value="">Select a category</option>
+<option value="electronics">Electronics</option>
+<option value="clothing">Clothing</option>
+<option value="home-kitchen">Home & Kitchen</option>
+<option value="books">Books</option>
+<option value="toys-games">Toys & Games</option>
+</select>
+<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+<div class="w-5 h-5 flex items-center justify-center text-gray-400">
+<i class="ri-arrow-down-s-line"></i>
+</div>
+</div>
+</div>
+</div>
+<div class="mb-4">
+<label class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+<input type="text" id="edit-item-name" class="block w-full px-3 py-2 border border-gray-300 rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Enter item name">
+</div>
+<div class="grid grid-cols-2 gap-4 mb-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="text-gray-500">$</span>
+</div>
+<input type="number" id="edit-item-price" min="0" step="0.01" class="block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="0.00">
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+<div class="flex">
+<button type="button" class="px-3 py-2 border border-r-0 border-gray-300 rounded-l-button bg-gray-50 hover:bg-gray-100" id="edit-decrease-qty">
+<div class="w-4 h-4 flex items-center justify-center">
+<i class="ri-subtract-line"></i>
+</div>
+</button>
+<input type="number" id="edit-item-quantity" min="0" class="block w-full text-center px-3 py-2 border-y border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+<button type="button" class="px-3 py-2 border border-l-0 border-gray-300 rounded-r-button bg-gray-50 hover:bg-gray-100" id="edit-increase-qty">
+<div class="w-4 h-4 flex items-center justify-center">
+<i class="ri-add-line"></i>
+</div>
+</button>
+</div>
+</div>
+</div>
+<div class="mb-4">
+<label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+<textarea id="edit-item-description" rows="4" class="block w-full px-3 py-2 border border-gray-300 rounded-button text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Enter item description"></textarea>
+</div>
+</div>
+<div class="md:col-span-1">
+<label class="block text-sm font-medium text-gray-700 mb-1">Item Image</label>
+<div id="edit-image-upload-area" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center image-upload-area">
+<div id="edit-image-preview" class="hidden mb-4 relative">
+<img id="edit-preview-image" src="" alt="Preview" class="mx-auto max-h-48 rounded">
+<button type="button" id="edit-remove-image" class="absolute top-0 right-0 bg-white rounded-full p-1 shadow-md">
+<div class="w-5 h-5 flex items-center justify-center text-gray-500 hover:text-gray-700">
+<i class="ri-close-line"></i>
+</div>
+</button>
+</div>
+<div id="edit-upload-prompt">
+<div class="mx-auto w-12 h-12 flex items-center justify-center text-gray-400 mb-2">
+<i class="ri-image-add-line ri-2x"></i>
+</div>
+<p class="text-sm text-gray-500">Drag and drop an image here, or <span class="text-primary cursor-pointer">browse</span></p>
+<p class="text-xs text-gray-400 mt-1">Supported formats: JPG, PNG, GIF (Max 5MB)</p>
+</div>
+<input type="file" id="edit-item-image" accept="image/*" class="hidden">
+</div>
+</div>
+</div>
+</form>
+</div>
+<div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+<button id="cancel-edit-item" class="py-2 px-4 border border-gray-300 rounded-button text-gray-700 hover:bg-gray-50 text-sm whitespace-nowrap">Cancel</button>
+<button id="save-edit-item" class="py-2 px-4 bg-primary text-white rounded-button hover:bg-primary/90 text-sm whitespace-nowrap">Save Changes</button>
+</div>
+</div>
+</div>
+<!-- Toast Notification -->
+<div id="toast-container" class="fixed top-4 right-4 z-50"></div>
+<script id="inventory-data-script">
+// Sample inventory data in JSON format
+const inventoryData = {
+"items": [
+{
+"id": "item001",
+"name": "MacBook Pro 14-inch",
+"category": "electronics",
+"categoryName": "Electronics",
+"price": 1999.99,
+"quantity": 15,
+"image_url": "https://readdy.ai/api/search-image?query=modern%2520macbook%2520pro%2520laptop%2520on%2520clean%2520white%2520background%2C%2520professional%2520high-quality%2520product%2520photography%2C%2520detailed%2520texture%2C%2520soft%2520shadows%2C%2520minimalist%2520composition%2C%2520commercial%2520product%2520shot&width=400&height=300&seq=1&orientation=landscape",
+"description": "14-inch MacBook Pro with M2 Pro chip, 16GB RAM, 512GB SSD storage.",
+"date_added": "2025-05-20T10:30:00Z",
+"last_modified": "2025-05-20T10:30:00Z"
+},
+{
+"id": "item002",
+"name": "Wireless Noise-Cancelling Headphones",
+"category": "electronics",
+"categoryName": "Electronics",
+"price": 299.99,
+"quantity": 28,
+"image_url": "https://readdy.ai/api/search-image?query=premium%2520wireless%2520headphones%2520on%2520clean%2520white%2520background%2C%2520professional%2520high-quality%2520product%2520photography%2C%2520detailed%2520texture%2C%2520soft%2520shadows%2C%2520minimalist%2520composition%2C%2520commercial%2520product%2520shot&width=400&height=300&seq=2&orientation=landscape",
+"description": "Premium wireless headphones with active noise cancellation, 30-hour battery life.",
+"date_added": "2025-05-18T14:15:00Z",
+"last_modified": "2025-05-18T14:15:00Z"
+},
+{
+"id": "item003",
+"name": "Smart 4K Ultra HD TV - 55\"",
+"category": "electronics",
+"categoryName": "Electronics",
+"price": 749.99,
+"quantity": 8,
+"image_url": "https://readdy.ai/api/search-image?query=modern%2520smart%2520tv%2520on%2520clean%2520white%2520background%2C%2520professional%2520high-quality%2520product%2520photography%2C%2520detailed%2520texture%2C%2520soft%2520shadows%2C%2520minimalist%2520composition%2C%2520commercial%2520product%2520shot&width=400&height=300&seq=3&orientation=landscape",
+"description": "55-inch 4K Ultra HD Smart TV with HDR, built-in streaming apps.",
+"date_added": "2025-05-15T09:45:00Z",
+"last_modified": "2025-05-15T09:45:00Z"
+},
+{
+"id": "item004",
+"name": "Men's Casual Cotton T-Shirt",
+"category": "clothing",
+"categoryName": "Clothing",
+"price": 24.99,
+"quantity": 120,
+"image_url": "https://readdy.ai/api/search-image?query=mens%2520casual%2520cotton%2520t-shirt%2520on%2520clean%2520white%2520background%2C%2520professional%2520high-quality%2520product%2520photography%2C%2520detailed%2520texture%2C%2520soft%2520shadows%2C%2520minimalist%2520composition%2C%2520commercial%2520product%2520shot&width=400&height=300&seq=4&orientation=landscape",
+"description": "Comfortable cotton t-shirt for men, available in multiple colors and sizes.",
+"date_added": "2025-05-22T11:20:00Z",
+"last_modified": "2025-05-22T11:20:00Z"
+},
+{
+"id": "item005",
+"name": "Women's Running Shoes",
+"category": "clothing",
+"categoryName": "Clothing",
+"price": 89.99,
+"quantity": 45,
+"image_url": "https://readdy.ai/api/search-image?query=womens%2520running%2520shoes%2520on%2520clean%2520white%2520background%2C%2520professional%2520high-quality%2520product%2520photography%2C%2520detailed%2520texture%2C%2520soft%2520shadows%2C%2520minimalist%2520composition%2C%2520commercial%2520product%2520shot&width=400&height=300&seq=5&orientation=landscape",
+"description": "Lightweight running shoes with cushioned soles for maximum comfort.",
+"date_added": "2025-05-19T16:40:00Z",
+"last_modified": "2025-05-19T16:40:00Z"
+},
+{
+"id": "item006",
+"name": "Denim Jacket - Unisex",
+"category": "clothing",
+"categoryName": "Clothing",
+"price": 59.99,
+"quantity": 32,
+"image_url": "https://readdy.ai/api/search-image?query=denim%2520jacket%2520on%2520clean%2520white%2520background%2C%2520professional%2520high-quality%2520product%2520photography%2C%2520detailed%2520texture%2C%2520soft%2520shadows%2C%2520minimalist%2520composition%2C%2520commercial%2520product%2520shot&width=400&height=300&seq=6&orientation=landscape",
+"description": "Classic denim jacket, perfect for casual outfits. Available in various sizes.",
+"date_added": "2025-05-17T13:10:00Z",
+"last_modified": "2025-05-17T13:10:00Z"
+},
+{
+"id": "item007",
+"name": "Stainless Steel Cookware Set",
+"category": "home-kitchen",
+"categoryName": "Home & Kitchen",
+"price": 199.99,
+"quantity": 18,
+"image_url": "https://readdy.ai/api/search-image?query=stainless%2520steel%2520cookware%2520set%2520on%2520clean%2520white%2520background%2C%2520professional%2520high-quality%2520product%2520photography%2C%2520detailed%2520texture%2C%2520soft%2520shadows%2C%2520minimalist%2520composition%2C%2520commercial%2520product%2520shot&width=400&height=300&seq=7&orientation=landscape",
+"description": "10-piece stainless steel cookware set including pots, pans, and lids.",
+"date_added": "2025-05-21T08:50:00Z",
+"last_modified": "2025-05-21T08:50:00Z"
+},
+{
+"id": "item008",
+"name": "Robot Vacuum Cleaner",
+"category": "home-kitchen",
+"categoryName": "Home & Kitchen",
+"price": 349.99,
+"quantity": 12,
+"image_url": "https://readdy.ai/api/search-image?query=robot%2520vacuum%2520cleaner%2520on%2520clean%2520white%2520background%2C%2520professional%2520high-quality%2520product%2520photography%2C%2520detailed%2520texture%2C%2520soft%2520shadows%2C%2520minimalist%2520composition%2C%2520commercial%2520product%2520shot&width=400&height=300&seq=8&orientation=landscape",
+"description": "Smart robot vacuum with mapping technology and app control.",
+"date_added": "2025-05-16T15:30:00Z",
+"last_modified": "2025-05-16T15:30:00Z"
+},
+{
+"id": "item009",
+"name": "Bestselling Novel - Hardcover",
+"category": "books",
+"categoryName": "Books",
+"price": 24.99,
+"quantity": 50,
+"image_url": "https://readdy.ai/api/search-image?query=hardcover%2520novel%2520book%2520on%2520clean%2520white%2520background%2C%2520professional%2520high-quality%2520product%2520photography%2C%2520detailed%2520texture%2C%2520soft%2520shadows%2C%2520minimalist%2520composition%2C%2520commercial%2520product%2520shot&width=400&height=300&seq=9&orientation=landscape",
+"description": "Latest bestselling fiction novel, hardcover edition.",
+"date_added": "2025-05-23T09:15:00Z",
+"last_modified": "2025-05-23T09:15:00Z"
+},
+{
+"id": "item010",
+"name": "Board Game - Strategy",
+"category": "toys-games",
+"categoryName": "Toys & Games",
+"price": 39.99,
+"quantity": 22,
+"image_url": "https://readdy.ai/api/search-image?query=strategy%2520board%2520game%2520on%2520clean%2520white%2520background%2C%2520professional%2520high-quality%2520product%2520photography%2C%2520detailed%2520texture%2C%2520soft%2520shadows%2C%2520minimalist%2520composition%2C%2520commercial%2520product%2520shot&width=400&height=300&seq=10&orientation=landscape",
+"description": "Fun strategy board game for 2-6 players, ages 10 and up.",
+"date_added": "2025-05-14T12:25:00Z",
+"last_modified": "2025-05-14T12:25:00Z"
+},
+{
+"id": "item011",
+"name": "Wireless Gaming Controller",
+"category": "toys-games",
+"categoryName": "Toys & Games",
+"price": 59.99,
+"quantity": 35,
+"image_url": "https://readdy.ai/api/search-image?query=wireless%2520gaming%2520controller%2520on%2520clean%2520white%2520background%2C%2520professional%2520high-quality%2520product%2520photography%2C%2520detailed%2520texture%2C%2520soft%2520shadows%2C%2520minimalist%2520composition%2C%2520commercial%2520product%2520shot&width=400&height=300&seq=11&orientation=landscape",
+"description": "Ergonomic wireless controller compatible with multiple gaming platforms.",
+"date_added": "2025-05-20T14:50:00Z",
+"last_modified": "2025-05-20T14:50:00Z"
+},
+{
+"id": "item012",
+"name": "Coffee Maker with Grinder",
+"category": "home-kitchen",
+"categoryName": "Home & Kitchen",
+"price": 129.99,
+"quantity": 14,
+"image_url": "https://readdy.ai/api/search-image?query=modern%2520coffee%2520maker%2520with%2520grinder%2520on%2520clean%2520white%2520background%2C%2520professional%2520high-quality%2520product%2520photography%2C%2520detailed%2520texture%2C%2520soft%2520shadows%2C%2520minimalist%2520composition%2C%2520commercial%2520product%2520shot&width=400&height=300&seq=12&orientation=landscape",
+"description": "Programmable coffee maker with built-in grinder for fresh coffee.",
+"date_added": "2025-05-18T10:05:00Z",
+"last_modified": "2025-05-18T10:05:00Z"
+}
+],
+"categories": [
+{
+"id": "electronics",
+"name": "Electronics",
+"icon": "ri-computer-line",
+"description": "Electronic devices and gadgets"
+},
+{
+"id": "clothing",
+"name": "Clothing",
+"icon": "ri-t-shirt-line",
+"description": "Apparel and accessories"
+},
+{
+"id": "home-kitchen",
+"name": "Home & Kitchen",
+"icon": "ri-home-line",
+"description": "Home appliances and kitchen equipment"
+},
+{
+"id": "books",
+"name": "Books",
+"icon": "ri-book-line",
+"description": "Books and publications"
+},
+{
+"id": "toys-games",
+"name": "Toys & Games",
+"icon": "ri-game-line",
+"description": "Toys, games, and entertainment items"
+}
+]
+};
+</script>
+<script id="ui-interactions-script">
+document.addEventListener('DOMContentLoaded', function() {
+// Toggle dropdowns
+const filterBtn = document.getElementById('filter-btn');
+const filterDropdown = document.getElementById('filter-dropdown');
+const sortBtn = document.getElementById('sort-btn');
+const sortDropdown = document.getElementById('sort-dropdown');
+document.addEventListener('click', function(event) {
+// Filter dropdown
+if (filterBtn.contains(event.target)) {
+filterDropdown.classList.toggle('hidden');
+if (sortDropdown) sortDropdown.classList.add('hidden');
+} else if (!filterDropdown.contains(event.target)) {
+filterDropdown.classList.add('hidden');
+}
+// Sort dropdown
+if (sortBtn.contains(event.target)) {
+sortDropdown.classList.toggle('hidden');
+if (filterDropdown) filterDropdown.classList.add('hidden');
+} else if (!sortDropdown.contains(event.target)) {
+sortDropdown.classList.add('hidden');
+}
+});
+// Custom checkbox functionality
+document.querySelectorAll('.custom-checkbox').forEach(checkbox => {
+checkbox.addEventListener('click', function() {
+this.classList.toggle('checked');
+});
+});
+// Custom switch functionality
+document.querySelectorAll('.custom-switch').forEach(switchEl => {
+switchEl.addEventListener('click', function() {
+this.classList.toggle('active');
+// Special case for low stock alert
+if (this.id === 'low-stock-switch') {
+const thresholdEl = document.getElementById('low-stock-threshold');
+if (this.classList.contains('active')) {
+thresholdEl.classList.remove('hidden');
+} else {
+thresholdEl.classList.add('hidden');
+}
+}
+});
+});
+// Category tabs
+document.querySelectorAll('.category-tab').forEach(tab => {
+tab.addEventListener('click', function() {
+document.querySelectorAll('.category-tab').forEach(t => {
+t.classList.remove('active');
+});
+this.classList.add('active');
+// Update the heading based on selected category
+const categoryName = this.querySelector('span').textContent;
+document.querySelector('h2').textContent = categoryName;
+});
+});
+// Icon selection in add category modal
+document.querySelectorAll('.icon-option').forEach(icon => {
+icon.addEventListener('click', function() {
+document.querySelectorAll('.icon-option').forEach(i => {
+i.classList.remove('selected', 'border-primary', 'text-primary', 'bg-blue-50');
+i.classList.add('border-gray-300');
+});
+this.classList.remove('border-gray-300');
+this.classList.add('selected', 'border-primary', 'text-primary', 'bg-blue-50');
+});
+});
+});
+</script>
+<script id="modal-management-script">
+document.addEventListener('DOMContentLoaded', function() {
+// Add Item Modal
+const addItemBtn = document.getElementById('add-item-btn');
+const editItemModal = document.getElementById('edit-item-modal');
+const addItemModal = document.getElementById('add-item-modal');
+const closeModal = document.getElementById('close-modal');
+const modalOverlay = document.getElementById('modal-overlay');
+const editModalOverlay = document.getElementById('edit-modal-overlay');
+const cancelAddItem = document.getElementById('cancel-add-item');
+const closeEditModal = document.getElementById('close-edit-modal');
+const cancelEditItem = document.getElementById('cancel-edit-item');
+function openAddItemModal() {
+addItemModal.classList.remove('hidden');
+document.body.style.overflow = 'hidden';
+}
+function closeAddItemModal() {
+addItemModal.classList.add('hidden');
+document.body.style.overflow = '';
+}
+function closeEditItemModal() {
+editItemModal.classList.add('hidden');
+document.body.style.overflow = '';
+}
+window.openEditModal = function(itemData) {
+const item = typeof itemData === 'string' ? JSON.parse(itemData) : itemData;
+document.getElementById('edit-item-id').value = item.id;
+document.getElementById('edit-category-select').value = item.category;
+document.getElementById('edit-item-name').value = item.name;
+document.getElementById('edit-item-price').value = item.price;
+document.getElementById('edit-item-quantity').value = item.quantity;
+document.getElementById('edit-item-description').value = item.description;
+const editImagePreview = document.getElementById('edit-image-preview');
+const editPreviewImage = document.getElementById('edit-preview-image');
+const editUploadPrompt = document.getElementById('edit-upload-prompt');
+editPreviewImage.src = item.image_url;
+editImagePreview.classList.remove('hidden');
+editUploadPrompt.classList.add('hidden');
+editItemModal.classList.remove('hidden');
+document.body.style.overflow = 'hidden';
+};
+addItemBtn.addEventListener('click', openAddItemModal);
+closeModal.addEventListener('click', closeAddItemModal);
+modalOverlay.addEventListener('click', closeAddItemModal);
+cancelAddItem.addEventListener('click', closeAddItemModal);
+closeEditModal.addEventListener('click', closeEditItemModal);
+editModalOverlay.addEventListener('click', closeEditItemModal);
+cancelEditItem.addEventListener('click', closeEditItemModal);
+// Edit quantity controls
+const editDecreaseBtn = document.getElementById('edit-decrease-qty');
+const editIncreaseBtn = document.getElementById('edit-increase-qty');
+const editQuantityInput = document.getElementById('edit-item-quantity');
+editDecreaseBtn.addEventListener('click', function() {
+let currentValue = parseInt(editQuantityInput.value);
+if (currentValue > 0) {
+editQuantityInput.value = currentValue - 1;
+}
+});
+editIncreaseBtn.addEventListener('click', function() {
+let currentValue = parseInt(editQuantityInput.value);
+editQuantityInput.value = currentValue + 1;
+});
+editQuantityInput.addEventListener('change', function() {
+if (this.value < 0) {
+this.value = 0;
+}
+});
+// Edit image upload functionality
+const editImageUploadArea = document.getElementById('edit-image-upload-area');
+const editItemImageInput = document.getElementById('edit-item-image');
+const editImagePreview = document.getElementById('edit-image-preview');
+const editPreviewImage = document.getElementById('edit-preview-image');
+const editUploadPrompt = document.getElementById('edit-upload-prompt');
+const editRemoveImageBtn = document.getElementById('edit-remove-image');
+editImageUploadArea.addEventListener('click', function() {
+editItemImageInput.click();
+});
+editItemImageInput.addEventListener('change', function() {
+if (this.files && this.files[0]) {
+const reader = new FileReader();
+reader.onload = function(e) {
+editPreviewImage.src = e.target.result;
+editImagePreview.classList.remove('hidden');
+editUploadPrompt.classList.add('hidden');
+};
+reader.readAsDataURL(this.files[0]);
+}
+});
+editRemoveImageBtn.addEventListener('click', function(e) {
+e.stopPropagation();
+editPreviewImage.src = '';
+editItemImageInput.value = '';
+editImagePreview.classList.add('hidden');
+editUploadPrompt.classList.remove('hidden');
+});
+// Save edited item
+const saveEditItemBtn = document.getElementById('save-edit-item');
+saveEditItemBtn.addEventListener('click', function() {
+const itemId = document.getElementById('edit-item-id').value;
+const updatedItem = {
+id: itemId,
+category: document.getElementById('edit-category-select').value,
+name: document.getElementById('edit-item-name').value,
+price: parseFloat(document.getElementById('edit-item-price').value),
+quantity: parseInt(document.getElementById('edit-item-quantity').value),
+description: document.getElementById('edit-item-description').value,
+image_url: document.getElementById('edit-preview-image').src
+};
+// Here you would normally update the item in your database
+// For now, we'll just show a success message and close the modal
+closeEditItemModal();
+showToast('Item updated successfully!', 'success');
+// Refresh the items display
+const updatedItems = inventoryData.items.map(item => 
+item.id === itemId ? { ...item, ...updatedItem } : item
+);
+inventoryData.items = updatedItems;
+renderItems(updatedItems);
+});
+// Add Category Modal
+const addCategoryBtn = document.getElementById('add-category-btn');
+const addCategoryModal = document.getElementById('add-category-modal');
+const closeCategoryModal = document.getElementById('close-category-modal');
+const categoryModalOverlay = document.getElementById('category-modal-overlay');
+const cancelAddCategory = document.getElementById('cancel-add-category');
+function openAddCategoryModal() {
+addCategoryModal.classList.remove('hidden');
+document.body.style.overflow = 'hidden';
+}
+function closeAddCategoryModal() {
+addCategoryModal.classList.add('hidden');
+document.body.style.overflow = '';
+}
+addCategoryBtn.addEventListener('click', openAddCategoryModal);
+closeCategoryModal.addEventListener('click', closeAddCategoryModal);
+categoryModalOverlay.addEventListener('click', closeAddCategoryModal);
+cancelAddCategory.addEventListener('click', closeAddCategoryModal);
+// Save buttons functionality
+const saveItemBtn = document.getElementById('save-item');
+const saveCategoryBtn = document.getElementById('save-category');
+saveItemBtn.addEventListener('click', function() {
+// Here you would normally save the item data
+closeAddItemModal();
+showToast('Item added successfully!', 'success');
+});
+saveCategoryBtn.addEventListener('click', function() {
+// Here you would normally save the category data
+closeAddCategoryModal();
+showToast('Category added successfully!', 'success');
+});
+});
+</script>
+<script id="image-upload-script">
+document.addEventListener('DOMContentLoaded', function() {
+const imageUploadArea = document.getElementById('image-upload-area');
+const itemImageInput = document.getElementById('item-image');
+const imagePreview = document.getElementById('image-preview');
+const previewImage = document.getElementById('preview-image');
+const uploadPrompt = document.getElementById('upload-prompt');
+const removeImageBtn = document.getElementById('remove-image');
+// Trigger file input when clicking on the upload area
+imageUploadArea.addEventListener('click', function() {
+itemImageInput.click();
+});
+// Handle file selection
+itemImageInput.addEventListener('change', function() {
+if (this.files && this.files[0]) {
+const reader = new FileReader();
+reader.onload = function(e) {
+previewImage.src = e.target.result;
+imagePreview.classList.remove('hidden');
+uploadPrompt.classList.add('hidden');
+};
+reader.readAsDataURL(this.files[0]);
+}
+});
+// Handle drag and drop
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+imageUploadArea.addEventListener(eventName, preventDefaults, false);
+});
+function preventDefaults(e) {
+e.preventDefault();
+e.stopPropagation();
+}
+['dragenter', 'dragover'].forEach(eventName => {
+imageUploadArea.addEventListener(eventName, highlight, false);
+});
+['dragleave', 'drop'].forEach(eventName => {
+imageUploadArea.addEventListener(eventName, unhighlight, false);
+});
+function highlight() {
+imageUploadArea.classList.add('border-primary', 'bg-blue-50');
+}
+function unhighlight() {
+imageUploadArea.classList.remove('border-primary', 'bg-blue-50');
+}
+imageUploadArea.addEventListener('drop', handleDrop, false);
+function handleDrop(e) {
+const dt = e.dataTransfer;
+const files = dt.files;
+if (files && files[0]) {
+const reader = new FileReader();
+reader.onload = function(e) {
+previewImage.src = e.target.result;
+imagePreview.classList.remove('hidden');
+uploadPrompt.classList.add('hidden');
+};
+reader.readAsDataURL(files[0]);
+}
+}
+// Remove image
+removeImageBtn.addEventListener('click', function(e) {
+e.stopPropagation();
+previewImage.src = '';
+itemImageInput.value = '';
+imagePreview.classList.add('hidden');
+uploadPrompt.classList.remove('hidden');
+});
+});
+</script>
+<script id="quantity-controls-script">
+document.addEventListener('DOMContentLoaded', function() {
+const decreaseBtn = document.getElementById('decrease-qty');
+const increaseBtn = document.getElementById('increase-qty');
+const quantityInput = document.getElementById('item-quantity');
+decreaseBtn.addEventListener('click', function() {
+let currentValue = parseInt(quantityInput.value);
+if (currentValue > 0) {
+quantityInput.value = currentValue - 1;
+}
+});
+increaseBtn.addEventListener('click', function() {
+let currentValue = parseInt(quantityInput.value);
+quantityInput.value = currentValue + 1;
+});
+quantityInput.addEventListener('change', function() {
+if (this.value < 0) {
+this.value = 0;
+}
+});
+});
+</script>
+<script id="toast-notification-script">
+function showToast(message, type = 'info') {
+const toastContainer = document.getElementById('toast-container');
+const toast = document.createElement('div');
+toast.className = 'toast flex items-center p-4 mb-3 rounded-lg shadow-lg max-w-xs';
+let bgColor, iconClass;
+switch (type) {
+case 'success':
+bgColor = 'bg-green-50 border-l-4 border-green-500';
+iconClass = 'ri-checkbox-circle-line text-green-500';
+break;
+case 'error':
+bgColor = 'bg-red-50 border-l-4 border-red-500';
+iconClass = 'ri-error-warning-line text-red-500';
+break;
+case 'warning':
+bgColor = 'bg-yellow-50 border-l-4 border-yellow-500';
+iconClass = 'ri-alert-line text-yellow-500';
+break;
+default:
+bgColor = 'bg-blue-50 border-l-4 border-blue-500';
+iconClass = 'ri-information-line text-blue-500';
+}
+toast.className += ` ${bgColor}`;
+toast.innerHTML = `
+<div class="w-6 h-6 flex items-center justify-center mr-3">
+<i class="${iconClass} ri-lg"></i>
+</div>
+<div class="flex-1 text-sm font-medium text-gray-800">${message}</div>
+<button class="ml-3 text-gray-400 hover:text-gray-500">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-close-line"></i>
+</div>
+</button>
+`;
+toastContainer.appendChild(toast);
+// Add click event to close button
+const closeBtn = toast.querySelector('button');
+closeBtn.addEventListener('click', function() {
+toast.remove();
+});
+// Auto remove after 3 seconds
+setTimeout(() => {
+if (toast.parentNode) {
+toast.remove();
+}
+}, 3000);
+}
+</script>
+<script id="render-items-script">
+document.addEventListener('DOMContentLoaded', function() {
+const itemsGrid = document.getElementById('items-grid');
+// Render items from the inventory data
+function renderItems(items) {
+itemsGrid.innerHTML = '';
+items.forEach(item => {
+const viewItemHandler = () => {
+showItemDetails(item);
+};
+const stockStatus = item.quantity > 10 ? 'In Stock' : item.quantity > 0 ? 'Low Stock' : 'Out of Stock';
+const stockColorClass = item.quantity > 10 ? 'bg-green-100 text-green-800' : item.quantity > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800';
+const itemCard = document.createElement('div');
+itemCard.className = 'item-card bg-white rounded-lg shadow-sm overflow-hidden flex flex-col';
+itemCard.innerHTML = `
+<div class="relative">
+<img src="${item.image_url}" alt="${item.name}" class="w-full h-48 object-cover object-top">
+<div class="absolute top-2 right-2 px-2 py-1 ${stockColorClass} text-xs font-medium rounded">
+${stockStatus}
+</div>
+<div class="quick-actions absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center space-x-2">
+<button class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-gray-700 hover:text-primary transition-colors" onclick="showItemDetails(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-eye-line"></i>
+</div>
+</button>
+<button class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-gray-700 hover:text-primary transition-colors" onclick="openEditModal(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-edit-line"></i>
+</div>
+</button>
+<button class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-gray-700 hover:text-red-500 transition-colors">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-delete-bin-line"></i>
+</div>
+</button>
+</div>
+</div>
+<div class="p-4 flex-1 flex flex-col">
+<div class="flex items-start justify-between">
+<div>
+<h3 class="font-medium text-gray-900">${item.name}</h3>
+<span class="text-sm text-gray-500">${item.categoryName}</span>
+</div>
+<span class="font-semibold text-primary">$${item.price.toFixed(2)}</span>
+</div>
+<div class="mt-4 flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-5 h-5 flex items-center justify-center text-gray-500">
+<i class="ri-stack-line"></i>
+</div>
+<span class="ml-1.5 text-sm text-gray-700">${item.quantity} in stock</span>
+</div>
+<button class="p-1.5 text-gray-500 hover:text-primary hover:bg-blue-50 rounded-full transition-colors">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-more-2-fill"></i>
+</div>
+</button>
+</div>
+</div>
+`;
+itemsGrid.appendChild(itemCard);
+});
+}
+// Initialize with all items
+renderItems(inventoryData.items);
+// Search functionality
+const searchInput = document.getElementById('search-input');
+searchInput.addEventListener('input', function() {
+const searchTerm = this.value.toLowerCase();
+if (searchTerm === '') {
+renderItems(inventoryData.items);
+return;
+}
+const filteredItems = inventoryData.items.filter(item => {
+return (
+item.name.toLowerCase().includes(searchTerm) ||
+item.categoryName.toLowerCase().includes(searchTerm) ||
+item.id.toLowerCase().includes(searchTerm)
+);
+});
+renderItems(filteredItems);
+});
+// Category filtering
+document.querySelectorAll('.category-tab').forEach((tab, index) => {
+tab.addEventListener('click', function() {
+const categoryName = this.querySelector('span').textContent;
+if (index === 0) { // "All Items" tab
+renderItems(inventoryData.items);
+document.querySelector('h2').textContent = 'All Items';
+document.querySelector('p.text-sm').textContent = `Showing ${inventoryData.items.length} items`;
+} else {
+const categoryId = inventoryData.categories[index - 1].id;
+const filteredItems = inventoryData.items.filter(item => item.category === categoryId);
+renderItems(filteredItems);
+document.querySelector('h2').textContent = categoryName;
+document.querySelector('p.text-sm').textContent = `Showing ${filteredItems.length} items`;
+}
+});
+});
+});
+</script>
+<!-- Item Details Modal -->
+<div id="item-details-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+<div class="absolute inset-0 bg-black bg-opacity-50" id="details-modal-overlay"></div>
+<div class="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 z-10">
+<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+<h3 class="text-lg font-semibold text-gray-800">Item Details</h3>
+<button id="close-details-modal" class="text-gray-400 hover:text-gray-500">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-close-line ri-lg"></i>
+</div>
+</button>
+</div>
+<div class="p-6">
+<div class="flex flex-col md:flex-row gap-6">
+<div class="w-full md:w-1/2">
+<div class="aspect-w-4 aspect-h-3 rounded-lg overflow-hidden bg-gray-100">
+<img id="details-image" src="" alt="" class="w-full h-full object-cover object-top">
+</div>
+<div class="mt-4 grid grid-cols-4 gap-2">
+<div class="aspect-w-1 aspect-h-1 rounded-md overflow-hidden bg-gray-100 cursor-pointer hover:opacity-75">
+<img id="details-thumbnail-1" src="" alt="" class="w-full h-full object-cover object-top">
+</div>
+<div class="aspect-w-1 aspect-h-1 rounded-md overflow-hidden bg-gray-100 cursor-pointer hover:opacity-75">
+<img id="details-thumbnail-2" src="" alt="" class="w-full h-full object-cover object-top">
+</div>
+<div class="aspect-w-1 aspect-h-1 rounded-md overflow-hidden bg-gray-100 cursor-pointer hover:opacity-75">
+<img id="details-thumbnail-3" src="" alt="" class="w-full h-full object-cover object-top">
+</div>
+<div class="aspect-w-1 aspect-h-1 rounded-md overflow-hidden bg-gray-100 cursor-pointer hover:opacity-75">
+<img id="details-thumbnail-4" src="" alt="" class="w-full h-full object-cover object-top">
+</div>
+</div>
+</div>
+<div class="w-full md:w-1/2">
+<div class="flex items-start justify-between mb-4">
+<div>
+<h2 id="details-name" class="text-2xl font-semibold text-gray-900"></h2>
+<p id="details-category" class="text-sm text-gray-500 mt-1"></p>
+</div>
+<div class="text-right">
+<div id="details-price" class="text-2xl font-bold text-primary"></div>
+<div id="details-stock-status" class="text-sm font-medium mt-1"></div>
+</div>
+</div>
+<div class="space-y-4">
+<div>
+<h4 class="text-sm font-medium text-gray-900 mb-1">Description</h4>
+<p id="details-description" class="text-gray-700"></p>
+</div>
+<div>
+<h4 class="text-sm font-medium text-gray-900 mb-1">Stock Information</h4>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-gray-50 p-3 rounded-lg">
+<div class="text-sm text-gray-500">Current Stock</div>
+<div id="details-quantity" class="text-lg font-semibold text-gray-900 mt-1"></div>
+</div>
+<div class="bg-gray-50 p-3 rounded-lg">
+<div class="text-sm text-gray-500">Last Updated</div>
+<div id="details-last-modified" class="text-lg font-semibold text-gray-900 mt-1"></div>
+</div>
+</div>
+</div>
+<div>
+<h4 class="text-sm font-medium text-gray-900 mb-1">Item Details</h4>
+<div class="grid grid-cols-2 gap-y-2 text-sm">
+<div class="text-gray-500">SKU/ID</div>
+<div id="details-id" class="text-gray-900 font-medium"></div>
+<div class="text-gray-500">Added Date</div>
+<div id="details-date-added" class="text-gray-900 font-medium"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+<button id="close-details-btn" class="py-2 px-4 border border-gray-300 rounded-button text-gray-700 hover:bg-gray-50 text-sm whitespace-nowrap">Close</button>
+<button id="edit-from-details" class="py-2 px-4 bg-primary text-white rounded-button hover:bg-primary/90 text-sm whitespace-nowrap">Edit Item</button>
+</div>
+</div>
+</div>
+<script id="item-details-script">
+document.addEventListener('DOMContentLoaded', function() {
+const detailsModal = document.getElementById('item-details-modal');
+const closeDetailsModal = document.getElementById('close-details-modal');
+const closeDetailsBtn = document.getElementById('close-details-btn');
+const detailsModalOverlay = document.getElementById('details-modal-overlay');
+function closeItemDetailsModal() {
+detailsModal.classList.add('hidden');
+document.body.style.overflow = '';
+}
+closeDetailsModal.addEventListener('click', closeItemDetailsModal);
+closeDetailsBtn.addEventListener('click', closeItemDetailsModal);
+detailsModalOverlay.addEventListener('click', closeItemDetailsModal);
+window.showItemDetails = function(itemData) {
+const item = typeof itemData === 'string' ? JSON.parse(itemData) : itemData;
+document.getElementById('details-image').src = item.image_url;
+document.getElementById('details-thumbnail-1').src = item.image_url;
+document.getElementById('details-thumbnail-2').src = item.image_url;
+document.getElementById('details-thumbnail-3').src = item.image_url;
+document.getElementById('details-thumbnail-4').src = item.image_url;
+document.getElementById('details-name').textContent = item.name;
+document.getElementById('details-category').textContent = item.categoryName;
+document.getElementById('details-price').textContent = `$${item.price.toFixed(2)}`;
+const stockStatus = item.quantity > 10 ? 'In Stock' : item.quantity > 0 ? 'Low Stock' : 'Out of Stock';
+const stockColorClass = item.quantity > 10 ? 'text-green-600' : item.quantity > 0 ? 'text-yellow-600' : 'text-red-600';
+document.getElementById('details-stock-status').textContent = stockStatus;
+document.getElementById('details-stock-status').className = `text-sm font-medium mt-1 ${stockColorClass}`;
+document.getElementById('details-description').textContent = item.description;
+document.getElementById('details-quantity').textContent = item.quantity;
+document.getElementById('details-id').textContent = item.id;
+const dateAdded = new Date(item.date_added);
+const lastModified = new Date(item.last_modified);
+document.getElementById('details-date-added').textContent = dateAdded.toLocaleDateString('en-US', {
+year: 'numeric',
+month: 'long',
+day: 'numeric'
+});
+document.getElementById('details-last-modified').textContent = lastModified.toLocaleDateString('en-US', {
+year: 'numeric',
+month: 'long',
+day: 'numeric'
+});
+detailsModal.classList.remove('hidden');
+document.body.style.overflow = 'hidden';
+};
+});
+</script>
+</body>
+</html>
