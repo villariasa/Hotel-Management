@@ -1,4 +1,4 @@
-# Hotel & Hospitality POS & Inventory Management System
+# <img src="icons/sparkles.svg" width="28" height="28" align="center" /> Hotel & Hospitality POS & Inventory Management System
 
 <div align="center">
 
@@ -17,25 +17,25 @@ Engineered for rapid cashier billing, dining table ordering, stock level monitor
 
 ---
 
-## 🌟 Modules & Features
+## <img src="icons/swatch.svg" width="22" height="22" align="center" /> Modules & Features
 
 ### 1. Interactive Point of Sale (POS) Terminal (`Interactive-POS-System.html`)
-- **Fast Cashier Billing:** Touch-friendly product grid with category filtering, search lookup, and variant selectors.
-- **Dynamic Cart Engine:** Live subtotal, tax calculation, discount modifiers (Senior Citizen / PWD / Promo vouchers), and change calculation.
-- **Order Ticket Generation:** Formatted bill review modal with instant print/export support.
+- <img src="icons/receipt-percent.svg" width="16" height="16" align="center" /> **Fast Cashier Billing** — Touch-friendly product grid with category filtering, instant search lookup, and variant selectors.
+- <img src="icons/currency-dollar.svg" width="16" height="16" align="center" /> **Dynamic Cart Engine** — Live subtotal, tax calculation, discount modifiers (Senior Citizen / PWD / Promo vouchers), and change calculation.
+- <img src="icons/printer.svg" width="16" height="16" align="center" /> **Order Ticket Generation** — Formatted bill review modal with instant print/export support.
 
 ### 2. Live Inventory Control (`Interactive-Inventory-Management.html`)
-- **Stock Depletion Tracking:** Automated item count reconciliation tied to POS sales.
-- **Reorder Threshold Alerts:** Visual warning indicators for low-stock and out-of-stock items.
-- **Category & Supplier Organization:** Modular cataloging for food, beverages, dining amenities, and room supplies.
+- <img src="icons/cube.svg" width="16" height="16" align="center" /> **Stock Depletion Tracking** — Automated item count reconciliation tied directly to POS sales transactions.
+- <img src="icons/bolt.svg" width="16" height="16" align="center" /> **Reorder Threshold Alerts** — Visual warning indicators for low-stock and out-of-stock items.
+- <img src="icons/archive-box.svg" width="16" height="16" align="center" /> **Category & Supplier Organization** — Modular cataloging for food, beverages, dining amenities, and room supplies.
 
 ### 3. Executive Analytics & Admin Dashboard (`material-dashboard-react-main/`)
-- Powered by **Material Dashboard 2 React** (MUI v5 + React 18).
-- Revenue charts, transaction volumes, employee performance stats, and billing history tables.
+- <img src="icons/table-cells.svg" width="16" height="16" align="center" /> Powered by **Material Dashboard 2 React** (MUI v5 + React 18).
+- <img src="icons/check-badge.svg" width="16" height="16" align="center" /> Real-time revenue charts, transaction volumes, employee performance stats, and billing history tables.
 
 ---
 
-## 📁 Repository Structure
+## <img src="icons/archive-box.svg" width="22" height="22" align="center" /> Repository Structure
 
 ```
 Hotel-Management/
@@ -46,20 +46,21 @@ Hotel-Management/
 ├── material-dashboard-react-main/         # React admin & executive analytics suite
 │   ├── src/                               # React components, layouts, and routes
 │   └── package.json                       # React + MUI dependencies
+├── icons/                                 # Tailwind Heroicons suite
 ├── common.css                             # Shared design tokens & responsive utilities
 └── fonts.css                              # Typography definitions
 ```
 
 ---
 
-## 🚀 Quick Launch
+## <img src="icons/rocket-launch.svg" width="22" height="22" align="center" /> Quick Launch
 
 ### Running the Standalone POS & Inventory
 
 Open the standalone HTML applications directly in any modern browser:
 
 ```bash
-# Simply launch via your browser
+# Launch via your browser
 google-chrome Interactive-POS-System.html
 # or
 google-chrome Interactive-Inventory-Management.html
@@ -79,6 +80,6 @@ npm start
 
 ---
 
-## 📄 License
+## <img src="icons/document-text.svg" width="22" height="22" align="center" /> License
 
 Proprietary © Medy Villarias. All rights reserved.
